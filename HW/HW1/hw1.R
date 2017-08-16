@@ -1,5 +1,5 @@
 ## Loading my data
-setwd("~/dropbox/github/wustl/hw")
+setwd("~/dropbox/github/wustl/hw/hw1/")
 debate <- read.csv("debate_data.csv")
 
 ## Creating rate variables
