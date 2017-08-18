@@ -51,13 +51,14 @@ for i in paths_sessions:
 ## function that will process any string of text
 ## so it will work for each press release and the stopwords
 def process_string(s, process_stopwords, stopwords_list = []):
-	s = re.sub(r"\W", " ", s) 
+	s = re.sub(r'[^\w\s]','',s)
 	s = s.lower() 
 	s = word_tokenize(s) 
 	s = [pt.stem(i) for i in s]
 	if not process_stopwords:
 		s = [i for i in s if i not in stopwords_list]
 	return s
+
 
 ## loading stopwords and processing them
 special_sw = ["shelby", "sessions", "richard", "jeff", "email", "press", "room", "member", "senate"]
@@ -102,7 +103,7 @@ common_trigrams = Counter(corpus_tg).most_common(500)
 ## Iterate over the processed press releases above
 ## For each of the common words, count how many are in press release
 ## Write row of length 1000/500 to csv
-with open("word_counts.csv", 'ab') as f:
+with open("unigram_counts.csv", 'ab') as f:
 
 	## extracting only words (not counts)
 	words = [i[0] for i in common_words]
@@ -130,17 +131,17 @@ with open("trigram_counts.csv", 'ab') as f:
 	
 	## setting up csv
 	writer = csv.writer(f)
-	writer.writerow(["author"] + header)
+	writer.writerow(["doc"] + ["author"] + header)
 
-	for release in tg_shelby:
+	for j, release in enumerate(tg_shelby):
 		## comparing to the most common list
-		row = [tg_release.count(tri) for tri in tg_words]
-		writer.writerow(["shelby"] + row)
+		row = [release.count(tri) for tri in tg_words]
+		writer.writerow([raw_shelby.keys()[j]] + ["shelby"] + row)
 
-	for release in tg_sessions:
+	for j, release in enumerate(tg_sessions):
 		## comparing to the most common list
-		row = [tg_release.count(tri) for tri in tg_words]
-		writer.writerow(["sessions"] + row)
+		row = [release.count(tri) for tri in tg_words]
+		writer.writerow([raw_sessions.keys()[j]] + ["sessions"] + row)
 
 
 

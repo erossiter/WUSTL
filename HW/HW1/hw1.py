@@ -77,12 +77,14 @@ sb_neg = [sb.stem(i) for i in neg]
 stopwords = " ".join(get_stop_words('en'))
 
 ## helper function to count words in turn from provided list
-def count_words(turn, words):
+## after applying the appropriate stemmer to the turn
+def count_words(turn, words, stemmer = "none"):
+	if stemmer == "st": turn = [st.stem(i) for i in turn]
+	elif stemmer == "pt": turn = [pt.stem(i) for i in turn]
+	elif stemmer == "sb": turn = [sb.stem(i) for i in turn]
+	elif stemmer == "none": pass
+	else: raise Exception
 	return len([x for x in turn if x in words])
-
-## helper function to count words in turn NOT in provided list
-def count_nonwords(turn, words):
-	return len([x for x in turn if x not in words])
 
 ## processing and writing data from each turn to csv
 with open("debate_data.csv", 'ab') as f:
@@ -97,23 +99,24 @@ with open("debate_data.csv", 'ab') as f:
 	stopwords = stopwords.lower() ## lower case
 	stopwords = word_tokenize(stopwords) ## tokenize
 
-	for i, turn in enumerate(debate):
+	for index, turn in enumerate(debate):
 		turn = re.sub(r"\W", " ", turn) ## remove punctuation
 		turn = turn.lower() ## lower case
 		turn = word_tokenize(turn) ## tokenize
+		turn = [i for i in turn if i not in stopwords] ## remove stopwords
 
 		## call helper functions to get data entry
-		row = ({"id" : i,
+		row = ({"id" : index,
 			"speaker" : turn[0],
-			"nonstopwords" : count_nonwords(turn, stopwords),
-			"pos" : count_words(turn, pos),
-			"neg" : count_words(turn, neg),
-			"st_pos" : count_words(turn, st_pos),
-			"st_neg" : count_words(turn, st_neg),
-			"pt_pos" : count_words(turn, pt_pos),
-			"pt_neg" : count_words(turn, pt_neg),
-			"sb_pos" : count_words(turn, sb_pos),
-			"sb_neg" : count_words(turn, sb_neg)
+			"nonstopwords" : len(turn)-1, ## minus the speaker
+			"pos" : count_words(turn, pos, "none"),
+			"neg" : count_words(turn, neg, "none"),
+			"st_pos" : count_words(turn, st_pos, "st"),
+			"st_neg" : count_words(turn, st_neg, "st"),
+			"pt_pos" : count_words(turn, pt_pos, "pt"),
+			"pt_neg" : count_words(turn, pt_neg, "pt"),
+			"sb_pos" : count_words(turn, sb_pos, "sb"),
+			"sb_neg" : count_words(turn, sb_neg, "sb")
 			}) 
 		w.writerow(row)
 
