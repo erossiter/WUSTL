@@ -239,7 +239,31 @@ mtext(side = 3, text = "Standardized Log Odds", cex = .5)
 
 dev.off()
 
+## 3.) Comparison ------------------------------------------------------
 
+##' I plot the 15 most discriminanting words (in either direction) for the
+##' processed top unigrams and trigrams.  
+##' 
+##' UNIGRAM OBSERVATIONS
+##' Of the three measures, independent linear discriminant returns the
+##' widest range in the discriminant words.  That is, among the most
+##' discriminating words, we have the most variation.  We see that Sessions
+##' talks a lot about Bush in his press releases.  He also often mentions the 
+##' day of the week, which is not very informative in what he's talking about.
+##' Although, we can deduce he's probably not talking a lot about policy if he's
+##' often mentioning a specific day.  Shelby talks a lot about funds, appropriations,
+##' and "million" is an important word.  It seems his press releases are often about
+##' funding for government programs.
+##' 
+##' TRIGRAM OBSERVATIONS
+##' There's a different trend here for Sessions.  We see he's talking a lot about
+##' his state, Alabama, which makes sense. He's also making annocements in his press
+##' releases.  Shelby's plot, on the other hand, isn't as informative here as it 
+##' was with unigrams.  I think I should have included press release words.  Regardless,
+##' this is language that puts him apart from Sessions.  His press releases talk
+##' about state news.  Also, the independent linear discriminant analysis is very different
+##' from the other two. Here was see he is talking about risk in children, cyber crime,
+##' and drug problems.  It's interesting the other two measures are so different.
 
 
 
@@ -250,7 +274,7 @@ set.seed(13489)
 shelby_100 <- trigrams[sample(which(trigrams$author == "shelby"), 100, replace = FALSE), -1]
 sessions_100 <- trigrams[sample(which(trigrams$author == "sessions"), 100, replace = FALSE), -1]
 
-## 2.) Creating matrices------------------------------------------------------
+## 2.) Creating matrices---------------------------------------------------------------------
 
 ## i.) Euclidean distance between documents
 
@@ -258,8 +282,8 @@ sessions_100 <- trigrams[sample(which(trigrams$author == "sessions"), 100, repla
 ## (I realize I double the computations necessary here...)
 ecl_dist <- as.matrix(dist(rbind(shelby_100, sessions_100),
                            method = "euclidean"))
-ecl_dist[lower.tri(ecl_dist, diag = T)] <- NA
-
+diag(ecl_dist) <- NA
+write.table(ecl_dist, file = "doc_similarity/ecl_dist.txt")
 
 ## ii.) Euclidean distance with tf-idf
 
@@ -277,7 +301,8 @@ sessions_idf <- adply(sessions_100, 1, function(row) row*idf_scores)
 
 tfidf_dist <- as.matrix(dist(rbind(shelby_idf, sessions_idf),
                              method="euclidean"))
-tfidf_dist[lower.tri(tfidf_dist, diag = T)] <- NA
+diag(tfidf_dist) <- NA
+write.table(tfidf_dist, file = "doc_similarity/tfidf_ecl_dist.txt")
 
 
 ## iii.) Cosine similarity
@@ -286,26 +311,74 @@ cos_func <- function(i, j){
   s2 <- unlist(sample_200[j, ])
   return( sum(s1*s2) / sqrt(sum(s1^2) * sum(s2^2)))
 }
-sample200 <- rbind(shelby_100, sessions_100)
+sample_200 <- rbind(shelby_100, sessions_100)
 cos_mat <- apply(expand.grid(1:200, 1:200), 1, cos_func)
 cos_mat2 <- matrix(cos_mat, nrow = 200, byrow = TRUE)
 
+diag(cos_mat2) <- NA
+write.table(cos_mat2, file = "doc_similarity/cos_sim.txt")
 
 
 ## iv.) Cosine similarity with tfidf
 cos_func_idf <- function(i, j){
-  s1 <- unlist(sample_200[i, ])
-  s2 <- unlist(sample_200[j, ])
+  s1 <- unlist(sample_200_idf[i, ])
+  s2 <- unlist(sample_200_idf[j, ])
   return( sum(s1*s2) / sqrt(sum(s1^2) * sum(s2^2)))
 }
 sample200_idf <- rbind(shelby_idf, sessions_idf)
 cos_mat_idf <- apply(expand.grid(1:200, 1:200), 1, cos_func_idf)
 cos_mat_idf2 <- matrix(cos_mat_idf, nrow = 200, byrow = TRUE)
 
+diag(cos_mat_idf2) <- NA
+write.table(cos_mat_idf2, file = "doc_similarity/cos_sim_tfidf.txt")
 
 ## v.) Normalize, Gaussian kernal
+normalized <- matrix(NA, nrow = 200, ncol = 500)
+for (i in 1:200){
+  normalized[i,1:500] <- unlist(sample_200[i,]/sum(sample_200[i,]))
+}
+
+sigma <- 100
+gauss_mat <- exp(-(as.matrix(dist(normalized)))/sigma)
+diag(gauss_mat)<- NA
+write.table(gauss_mat, file = "doc_similarity/normalized_gaussian.txt")
+
+
+## vi.) Normalize, Gaussian kernal, tfidf weights
+idf_func <- function(x){
+  N <- 200
+  n_j <- sum(x != 0)
+  return(log(N / n_j))
+}
+idf_scores <- apply(normalized, 2,  idf_func)
+
+idf_normalized <- as.matrix(t(apply(normalized, 1, function(x) x*idf_scores)))
+gauss_norm <- exp(-(as.matrix(dist(idf_normalized)))/sigma)
+diag(gauss_norm)<- NA
+write.table(gauss_norm, "doc_similarity/normalized_gaussian_tfidf.txt")
 
 
 
 ## 3.) Similar and Dissimilar Docs --------------------------------------
+which(ecl_dist == max(ecl_dist, na.rm=T), arr.ind=T)
+which(ecl_dist == min(ecl_dist, na.rm=T), arr.ind=T)
 
+
+which(tfidf_dist == max(tfidf_dist, na.rm=T), arr.ind=T)
+which(tfidf_dist == min(tfidf_dist, na.rm=T), arr.ind=T)
+
+
+which(cos_mat2 == max(cos_mat2, na.rm=T), arr.ind=T)
+which(cos_mat2 == min(cos_mat2, na.rm=T), arr.ind=T)
+
+
+which(cos_mat_idf2 == max(cos_mat_idf2, na.rm=T), arr.ind=T)
+which(cos_mat_idf2 == min(cos_mat_idf2, na.rm=T), arr.ind=T)
+
+
+which(gauss_mat == max(gauss_mat, na.rm=T), arr.ind=T)
+which(gauss_mat == min(gauss_mat, na.rm=T), arr.ind=T)
+
+
+which(gauss_norm == max(gauss_norm, na.rm=T), arr.ind=T)
+which(gauss_norm == min(gauss_norm, na.rm=T), arr.ind=T)

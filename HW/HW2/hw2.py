@@ -27,7 +27,7 @@ for i in paths_shelby:
 	file_info["text"] = " ".join(open(i).read().split())
 	## nesting release dictionary into full dictionary
 	## naming this particular dictionary 'Shelby100' for example
-	raw_shelby[info[9:].replace(".txt", "")] = file_info
+	raw_shelby[info.replace(".txt", "")] = file_info
 
 ## sessions dictionary
 paths_sessions = glob("releases/sessions/*")
@@ -41,7 +41,7 @@ for i in paths_sessions:
 	file_info["author"] = "sessions"
 	file_info["text"] = " ".join(open(i).read().split())
 	## nesting release dictionary into full dictionary
-	raw_sessions[info[9:].replace(".txt", "")] = file_info
+	raw_sessions[info.replace(".txt", "")] = file_info
 
 
 ############
