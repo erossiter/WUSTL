@@ -321,8 +321,8 @@ write.table(cos_mat2, file = "doc_similarity/cos_sim.txt")
 
 ## iv.) Cosine similarity with tfidf
 cos_func_idf <- function(i, j){
-  s1 <- unlist(sample_200_idf[i, ])
-  s2 <- unlist(sample_200_idf[j, ])
+  s1 <- unlist(sample200_idf[i, ])
+  s2 <- unlist(sample200_idf[j, ])
   return( sum(s1*s2) / sqrt(sum(s1^2) * sum(s2^2)))
 }
 sample200_idf <- rbind(shelby_idf, sessions_idf)
@@ -360,25 +360,27 @@ write.table(gauss_norm, "doc_similarity/normalized_gaussian_tfidf.txt")
 
 
 ## 3.) Similar and Dissimilar Docs --------------------------------------
-which(ecl_dist == max(ecl_dist, na.rm=T), arr.ind=T)
-which(ecl_dist == min(ecl_dist, na.rm=T), arr.ind=T)
+sink("these.txt")
+print(which(ecl_dist == max(ecl_dist, na.rm=T), arr.ind=T))
+print(which(ecl_dist == min(ecl_dist, na.rm=T), arr.ind=T))
 
 
-which(tfidf_dist == max(tfidf_dist, na.rm=T), arr.ind=T)
-which(tfidf_dist == min(tfidf_dist, na.rm=T), arr.ind=T)
+print(which(tfidf_dist == max(tfidf_dist, na.rm=T), arr.ind=T))
+print(which(tfidf_dist == min(tfidf_dist, na.rm=T), arr.ind=T))
 
 
-which(cos_mat2 == max(cos_mat2, na.rm=T), arr.ind=T)
-which(cos_mat2 == min(cos_mat2, na.rm=T), arr.ind=T)
+print(which(cos_mat2 == max(cos_mat2, na.rm=T), arr.ind=T))
+which(cos_mat2 == min(cos_mat2, na.rm=T), arr.ind=T))
 
 
-which(cos_mat_idf2 == max(cos_mat_idf2, na.rm=T), arr.ind=T)
-which(cos_mat_idf2 == min(cos_mat_idf2, na.rm=T), arr.ind=T)
+print(which(cos_mat_idf2 == max(cos_mat_idf2, na.rm=T), arr.ind=T))
+print(which(cos_mat_idf2 == min(cos_mat_idf2, na.rm=T), arr.ind=T))
 
 
-which(gauss_mat == max(gauss_mat, na.rm=T), arr.ind=T)
-which(gauss_mat == min(gauss_mat, na.rm=T), arr.ind=T)
+print(which(gauss_mat == max(gauss_mat, na.rm=T), arr.ind=T))
+print(which(gauss_mat == min(gauss_mat, na.rm=T), arr.ind=T))
 
 
-which(gauss_norm == max(gauss_norm, na.rm=T), arr.ind=T)
-which(gauss_norm == min(gauss_norm, na.rm=T), arr.ind=T)
+print(which(gauss_norm == max(gauss_norm, na.rm=T), arr.ind=T))
+print(which(gauss_norm == min(gauss_norm, na.rm=T), arr.ind=T))
+sink()
