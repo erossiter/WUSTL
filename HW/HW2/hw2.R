@@ -360,27 +360,60 @@ write.table(gauss_norm, "doc_similarity/normalized_gaussian_tfidf.txt")
 
 
 ## 3.) Similar and Dissimilar Docs --------------------------------------
-sink("these.txt")
+sink("mat_eval.txt")
+
 print(which(ecl_dist == max(ecl_dist, na.rm=T), arr.ind=T))
 print(which(ecl_dist == min(ecl_dist, na.rm=T), arr.ind=T))
-
 
 print(which(tfidf_dist == max(tfidf_dist, na.rm=T), arr.ind=T))
 print(which(tfidf_dist == min(tfidf_dist, na.rm=T), arr.ind=T))
 
-
 print(which(cos_mat2 == max(cos_mat2, na.rm=T), arr.ind=T))
-which(cos_mat2 == min(cos_mat2, na.rm=T), arr.ind=T))
-
+print(which(cos_mat2 == min(cos_mat2, na.rm=T), arr.ind=T))
 
 print(which(cos_mat_idf2 == max(cos_mat_idf2, na.rm=T), arr.ind=T))
 print(which(cos_mat_idf2 == min(cos_mat_idf2, na.rm=T), arr.ind=T))
 
-
 print(which(gauss_mat == max(gauss_mat, na.rm=T), arr.ind=T))
 print(which(gauss_mat == min(gauss_mat, na.rm=T), arr.ind=T))
-
 
 print(which(gauss_norm == max(gauss_norm, na.rm=T), arr.ind=T))
 print(which(gauss_norm == min(gauss_norm, na.rm=T), arr.ind=T))
 sink()
+
+##' First, it is important to note than several of these measures give *many*
+##' documents as being the most similar or dissimilar.  This is likely due to
+##' the fact that few trigrams are shared across documents.  In other words,
+##' these measures would probably be more discriminating if the words themselves
+##' were more discriminating, as would be the case with unigrams.  However,
+##' doing these calculations in R with unigrams would be very slow so I
+##' understand why the exercise used trigrams!
+##' 
+##' The Euclidean distance reports the Nov 14, 2006 (357) and the
+##' June 28, 2007 (127) Shelby press releases as least similar. (I know this
+##' because I used the document names as rownames in my dataframe.)  This
+##' seems to make some sense.  The former is strictly about funds to a fire
+##' department.  The latter is about several projects including drug law
+##' enforcement, a NASA facility bringing jobs, computer crime work, and many
+##' more (but no fire department talk).
+##' 
+##' Euclidean distance, now with tfidf, also identifies the June 28, 2007 (127)
+##' Shelby press release as being most dissimilar but with the July 21, 2005 (222)
+##' press release.  The latter press release discusses funding for infrastructure
+##' projects and education, two topics not discussed in the June 28, 2007 release.
+##' 
+##' Again, the cosine similarity measure identifies the June 28, 2007 (127) release
+##' as being most dissimilar but with the Sep 14, 2005 (296) release this time.
+##' These again are different.  Now let's look to what is supposed to be most similar
+##' with the cosine similarity. Two Sessions press releases are identified:
+##' Nov 18, 2005 (167 and 166).  These are indeed different.  The first is about
+##' a nomination to the Tennessee Valley Authority Board of Directors  and the second
+##' is about imigration and law enforcement.  My hunch is that since they were released
+##' the same day, they are identified as similar because of language about the date
+##' of the release.
+##' 
+##' Even just looking at these first three methods, it is interesting to see that
+##' the July 28th Shelby press release is identified as being most similar in
+##' all cases, but to something different each time.  This is most likely
+##' the case because it is a very long press release, talking about a lot of topics,
+##' which gives it the potential to have trigrams matching with other press releases.
