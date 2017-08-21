@@ -28,18 +28,19 @@ one_kmeans <- function(n_clusters){
 }
 
 # Running in parallel *within* function for two through N-1 clusters
-registerDoMC(2)
+registerDoMC(detectCores() - 1)
 set.seed(143490)
-pts <- aaply(.data = 2:10,#(nrow(nyt_norm)-1),
+pts <- aaply(.data = 2:(nrow(nyt_norm)-1),
              .margins = 1,
              .fun = one_kmeans,
              .parallel = FALSE)
 
+pdf("kmeans_plot.pdf")
 plot(pts, type = "l",
-     main = "kmeans Objective Function Varies in Response to the No. of Clusters",
+     main = "kmeans Objective Function Varies\nin Response to the No. of Clusters",
      xlab = "No. of Clusters",
      ylab = "Objective Function")
-
+dev.off()
 
 ## 2.) -------------------------------------------------------------------------
 set.seed(480184)

@@ -165,11 +165,36 @@ shift" in our news.'''
 
 
 
-
-
 ###################################################
 ## Part 3 : Supervised Learning with Naive Bayes ##
 ###################################################
+
+## There are 56 business and 76 national stores
+## Grabbing just those to use.
+business = [processed_nyt[i] for i, d in enumerate(desks) if d == "Business/Financial Desk"]
+national = [processed_nyt[i] for i, d in enumerate(desks) if d == "National Desk"]
+
+bus_train = business[::2]
+nat_train = national[::2]
+
+n_train = [float(len(bus_train)), float(len(nat_train))]
+n = sum(n_train)
+
+p_ck = [n_train[0]/n, n_train[1]/n]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
