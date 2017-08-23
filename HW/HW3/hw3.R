@@ -2,6 +2,8 @@
 library(plyr)
 library(parallel)
 library(doMC)
+library(glmnet)
+library(e1071)
 setwd("~/dropbox/github/wustl/hw/hw3/")
 nyt <- read.csv("doc_term_mat.csv")
 
@@ -91,6 +93,41 @@ colnames(sample_docs) <- paste0("cluster", 2:6)
 ##' clusters 3, 4, 5, and 6 were easy to label off the top ten words.
 ##' Cluster 2 was a little odd.  I think it was conflating global politics,
 ##' and elections with U.S. elections.
+
+
+
+## Supervised learning with Naive Bayes
+
+## Part C: Comparing
+nyt_comparing <- nyt[nyt$desk == "Business/Financial Desk" | nyt$desk == "National Desk", ]
+
+## Running naiveBayes because my function doesn't work...
+pred <- rep(NA, nrow(nyt_comparing))
+for(i in 1:nrow(nyt_comparing)){
+  fit <- naiveBayes(nyt_comparing$desk[-i] ~., data = nyt_comparing[-i, ])
+  pred[i] <- as.character(predict(fit, nyt_comparing[i, -1]))
+}
+
+sum(pred == nyt_comparing$desk)/nrow(nyt_comparing) ## 88% accuracy!
+
+
+# Now running lasso
+lasso <- cv.glmnet(x = as.matrix(nyt_comparing[,-1]),
+                   y = factor(nyt_comparing$desk, labels = c("B", "N")),
+                   nfolds = 10,
+                   alpha = 1,
+                   family = "binomial",
+                   type.measure = "mse")
+
+ridge <- cv.glmnet(x = as.matrix(nyt_comparing[,-1]),
+                        y = factor(nyt_comparing$desk, labels = c("B", "N")), 
+                        nfolds = 10,
+                        alpha = 0,
+                        family = "binomial",
+                        type.measure = "mse")
+
+
+
 
 
 

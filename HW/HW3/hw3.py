@@ -8,6 +8,7 @@ from collections import Counter
 from nltk.stem import PorterStemmer
 pt = PorterStemmer()
 import json
+import math
 
 
 #########################################################
@@ -71,6 +72,7 @@ with open("doc_term_mat.csv", 'ab') as f:
 	for i, story in enumerate(processed_nyt):
 		row = [story.count(w) for w in words]
 		writer.writerow([desks[i]] + row)
+
 
 
 ## Clustering Methods part of exercise is in R script ##
@@ -169,18 +171,84 @@ shift" in our news.'''
 ## Part 3 : Supervised Learning with Naive Bayes ##
 ###################################################
 
+## My function takes only a list where each element is a tuple
+## representing a labeled document.
+## In that tuple, the first element is a label and the second
+## is a list of words.
+def nb_train(train):
+	all_labels = [doc[0] for doc in train]
+	unq_labels = list(set(all_labels))
+	p_ck = [all_labels.count(i)/float(len(all_labels)) for i in unq_labels]
+
+	all_counts = {}
+	all_total = {}
+	all_probs = {}
+	for k in unq_labels:
+		## list of all words in the category
+		k_allwords = []
+		for i in train:
+			if i[0] == k:
+				k_allwords.extend(i[1])
+
+		## number of times each word associated w/a label occured
+		k_counts = dict(Counter(k_allwords))
+		## total number of unique (?) words associated w/a label
+		k_total = len(k_counts.keys())
+		## get probability for each word
+		k_probs = map(lambda x: float(x)/k_total, k_counts.values())
+		## turn probability list into dictionary
+		k_probs = {k_counts.keys()[i] : k_probs[i] for i in range(k_total)}
+
+		all_counts[k] = k_counts
+		all_total[k] = k_total
+		all_probs[k] = k_probs
+
+	return all_probs, unq_labels, p_ck
+
+## This function takes a test set (formatting like for the
+## training function) as well as all output from the training function.
+def nb_test(test, all_probs, labels, p_ck):
+	all_label_probs = []
+	test = [test] ## doing this bc how i set up data didn't work well for leave one out
+	for doc in test:
+		words = doc[1]
+		label_probs = []
+		for i, k in enumerate(labels):
+			running_prob = 0.0
+			for w in words:
+				try:
+					running_prob += math.log(all_probs[k][w])
+				except KeyError: ## word not in train set
+					continue
+			running_prob += math.log(p_ck[i])
+			label_probs.append(math.exp(running_prob))
+		all_label_probs.append(label_probs)
+	return all_label_probs
+
+
 ## There are 56 business and 76 national stores
 ## Grabbing just those to use.
-business = [processed_nyt[i] for i, d in enumerate(desks) if d == "Business/Financial Desk"]
-national = [processed_nyt[i] for i, d in enumerate(desks) if d == "National Desk"]
+business = [("B", processed_nyt[i]) for i, d in enumerate(desks) if d == "Business/Financial Desk"]
+national = [("N", processed_nyt[i]) for i, d in enumerate(desks) if d == "National Desk"]
 
-bus_train = business[::2]
-nat_train = national[::2]
+for i in range(len(business + national)):
+	## removing one from full set
+	train = business + national
+	test = train[i]
+	del train[i]
 
-n_train = [float(len(bus_train)), float(len(nat_train))]
-n = sum(n_train)
+	all_probs, labels, p_ck = nb_train(train)
 
-p_ck = [n_train[0]/n, n_train[1]/n]
+	result = nb_test(test, all_probs, labels, p_ck)
+
+	print result
+
+
+
+## Comparing Naive Bayes to other methods is in R script ##
+
+
+
 
 
 
