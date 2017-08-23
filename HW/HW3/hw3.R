@@ -111,25 +111,37 @@ for(i in 1:nrow(nyt_comparing)){
 sum(pred == nyt_comparing$desk)/nrow(nyt_comparing) ## 88% accuracy!
 
 
+
+## Leaving out 1/3 of data to predict with for LASSO and Ridge
+set.seed(1487)
+test <- sample(1:nrow(nyt_comparing), 44)
+test_desks <- ifelse(as.numeric(nyt_comparing$desk[test]) == 6, 1, 0)
+
 # Now running lasso
-lasso <- cv.glmnet(x = as.matrix(nyt_comparing[,-1]),
-                   y = factor(nyt_comparing$desk, labels = c("B", "N")),
-                   nfolds = 10,
-                   alpha = 1,
-                   family = "binomial",
-                   type.measure = "mse")
+lasso_train <- cv.glmnet(x = as.matrix(nyt_comparing[-test,-1]),
+                         y = factor(nyt_comparing$desk, labels = c("B", "N"))[-test],
+                         nfolds = 10,
+                         alpha = 1,
+                         family = "binomial",
+                         type.measure = "mse")
 
-ridge <- cv.glmnet(x = as.matrix(nyt_comparing[,-1]),
-                        y = factor(nyt_comparing$desk, labels = c("B", "N")), 
-                        nfolds = 10,
-                        alpha = 0,
-                        family = "binomial",
-                        type.measure = "mse")
+lasso_preds <- predict(lasso_train, newx = as.matrix(nyt_comparing[test, -1]), s = lasso_train$lambda.min)
+lasso_preds <- 1/(1 + exp(-lasso_preds))
+lasso_preds <- ifelse(lasso_preds >= .5, 1, 0)
+sum(lasso_preds == test_desks)/length(test_desks) ## 88% as well... weird
 
+## Now running ridge
+ridge_train <- cv.glmnet(x = as.matrix(nyt_comparing[-test,-1]),
+                         y = factor(nyt_comparing$desk, labels = c("B", "N"))[-test], 
+                         nfolds = 10,
+                         alpha = 0,
+                         family = "binomial",
+                         type.measure = "mse")
 
-
-
-
+ridge_preds <- predict(ridge_train, newx = as.matrix(nyt_comparing[test, -1]), s = ridge_train$lambda.min)
+ridge_preds <- 1/(1 + exp(-ridge_preds))
+ridge_preds <- ifelse(ridge_preds >= .5, 1, 0)
+sum(ridge_preds == test_desks)/length(test_desks) ## 93% now, an improvement.
 
 
 

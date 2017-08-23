@@ -231,15 +231,20 @@ def nb_test(test, all_probs, labels, p_ck):
 business = [("B", processed_nyt[i]) for i, d in enumerate(desks) if d == "Business/Financial Desk"]
 national = [("N", processed_nyt[i]) for i, d in enumerate(desks) if d == "National Desk"]
 
+
+## Sadly, my functions are not giving good output!  Everything
+## has a probability of 0, basically.  I can't figure it out.
 for i in range(len(business + national)):
 	## removing one from full set
 	train = business + national
 	test = train[i]
 	del train[i]
 
-	all_probs, labels, p_ck = nb_train(train)
+	## my training function
+	all_probs, labels, p_ck = nb_train(train) 
 
-	result = nb_test(test, all_probs, labels, p_ck)
+	## my prediction function
+	result = nb_test(test, all_probs, labels, p_ck) 
 
 	print result
 
