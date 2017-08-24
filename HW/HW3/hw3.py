@@ -19,14 +19,14 @@ import math
 with open("nyt_ac.json") as json_data:
     nyt_data = json.load(json_data)
 
-## writing pertinent text to files
-for i, doc in enumerate(nyt_data):
-	title = doc["body"]["title"]
-	text = doc["body"]["body_text"]
-	with open("stories/doc" + str(i+1) + ".txt", "w") as f:
-		f.write(title.encode("UTF-8"))
-		f.write("\n")
-		f.write(text.encode("UTF-8"))
+# ## writing pertinent text to files
+# for i, doc in enumerate(nyt_data):
+# 	title = doc["body"]["title"]
+# 	text = doc["body"]["body_text"]
+# 	with open("stories/doc" + str(i+1) + ".txt", "w") as f:
+# 		f.write(title.encode("UTF-8"))
+# 		f.write("\n")
+# 		f.write(text.encode("UTF-8"))
 
 def process_string(s, process_stopwords, stopwords_list = []):
 	s = re.sub(r'[^\w\s]','',s)
@@ -59,19 +59,19 @@ corpus_words = sum(processed_nyt, [])
 ## Making list of 1000 most used terms
 common_words = Counter(corpus_words).most_common(1000)
 
-with open("doc_term_mat.csv", 'ab') as f:
+# with open("doc_term_mat.csv", 'ab') as f:
 
-	## extracting only words (not counts)
-	words = [i[0] for i in common_words]
+# 	## extracting only words (not counts)
+# 	words = [i[0] for i in common_words]
 	
-	## setting up csv
-	writer = csv.writer(f)
-	writer.writerow(["desk"] + words)
+# 	## setting up csv
+# 	writer = csv.writer(f)
+# 	writer.writerow(["desk"] + words)
 
-	## counting
-	for i, story in enumerate(processed_nyt):
-		row = [story.count(w) for w in words]
-		writer.writerow([desks[i]] + row)
+# 	## counting
+# 	for i, story in enumerate(processed_nyt):
+# 		row = [story.count(w) for w in words]
+# 		writer.writerow([desks[i]] + row)
 
 
 
@@ -180,34 +180,58 @@ def nb_train(train):
 	unq_labels = list(set(all_labels))
 	p_ck = [all_labels.count(i)/float(len(all_labels)) for i in unq_labels]
 
+	all_words = [doc[1] for doc in train]
+	all_words = sum(all_words, [])
+
+	## get list of all possible words
+	## then add them as zero to my dictionary of counts
+	## then add 1 to every entry
+	## then add total number of all words to total number of label words
+
 	all_counts = {}
 	all_total = {}
 	all_probs = {}
+	smoothing = []
 	for k in unq_labels:
 		## list of all words in the category
 		k_allwords = []
-		for i in train:
-			if i[0] == k:
-				k_allwords.extend(i[1])
+		for doc in train:
+			if doc[0] == k:
+				k_allwords.extend(doc[1])
 
 		## number of times each word associated w/a label occured
 		k_counts = dict(Counter(k_allwords))
-		## total number of unique (?) words associated w/a label
-		k_total = len(k_counts.keys())
+		## total number of words associated w/a label
+		k_total = sum(k_counts.values())
+
+		## smoothing by adding 1 to all (and including words not in label)
+		for word in all_words:
+			if word not in k_counts.keys():
+				k_counts[word] = 1
+			else:
+				k_counts[word] += 1
+
+		## smoothing the denominator of probability, too
+		k_total += len(all_words)
+
+		## returning this prob for if a word is not in the test set
+		smoothing.append(1.0/k_total)
+
 		## get probability for each word
 		k_probs = map(lambda x: float(x)/k_total, k_counts.values())
+
 		## turn probability list into dictionary
-		k_probs = {k_counts.keys()[i] : k_probs[i] for i in range(k_total)}
+		k_probs = {k_counts.keys()[j] : k_probs[j] for j in range(len(k_counts))}
 
 		all_counts[k] = k_counts
 		all_total[k] = k_total
 		all_probs[k] = k_probs
 
-	return all_probs, unq_labels, p_ck
+	return all_probs, unq_labels, p_ck, smoothing
 
 ## This function takes a test set (formatting like for the
 ## training function) as well as all output from the training function.
-def nb_test(test, all_probs, labels, p_ck):
+def nb_test(test, all_probs, labels, p_ck, smoothing):
 	all_label_probs = []
 	test = [test] ## doing this bc how i set up data didn't work well for leave one out
 	for doc in test:
@@ -219,7 +243,7 @@ def nb_test(test, all_probs, labels, p_ck):
 				try:
 					running_prob += math.log(all_probs[k][w])
 				except KeyError: ## word not in train set
-					continue
+					running_prob += math.log(smoothing[i])
 			running_prob += math.log(p_ck[i])
 			label_probs.append(math.exp(running_prob))
 		all_label_probs.append(label_probs)
@@ -241,12 +265,13 @@ for i in range(len(business + national)):
 	del train[i]
 
 	## my training function
-	all_probs, labels, p_ck = nb_train(train) 
+	all_probs, labels, p_ck, smoothing = nb_train(train) 
 
 	## my prediction function
-	result = nb_test(test, all_probs, labels, p_ck) 
+	result = nb_test(test, all_probs, labels, p_ck, smoothing) 
 
 	print result
+	print result[0][0] > result[0][1]
 
 
 
