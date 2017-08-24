@@ -200,6 +200,44 @@ pred_cor <- cor(pred_mat)
 
 
 ## vi.)
+## For each of the 5 methods, I assess the performance of
+## 2 approaches: the 10 fold validation and the setting aside
+## of a 20item testset.
+lm_perform_10fold <- sum(abs(train_y - lm_preds)/375)
+lm_perform_testset <- sum(abs(validation_y - lm_preds2)/20)
 
+lasso_perform_10fold <- sum(abs(train_y - lasso_preds)/375)
+lasso_perform_testset <- sum(abs(validation_y - lasso_preds2)/20)
 
+ridge_perform_10fold <- sum(abs(train_y - ridge_preds)/375)
+ridge_perform_testset <- sum(abs(validation_y - ridge_preds2)/20)
+
+en_perform_10fold <- sum(abs(train_y - en_preds)/375)
+en_perform_testset <- sum(abs(validation_y - en_preds2)/20)
+
+rf_perform_10fold <- sum(abs(train_y - rf_preds)/375)
+rf_perform_testset <- sum(abs(validation_y - rf_preds2)/20)
+
+## Here I calculate the absolute difference between the true Y
+## and the weighted/unweighted Y's that are a compilation
+## of the predictions above.
+unweight_perform_10fold <- sum(abs(train_y - unweight_10fold)/375)
+weight_perform_10fold <- sum(abs(train_y - weight_10fold)/375)
+
+all_performance <- c(lm_perform_10fold, lm_perform_testset,
+                     lasso_perform_10fold, lasso_perform_testset,
+                     ridge_perform_10fold, ridge_perform_testset,
+                     en_perform_10fold, en_perform_testset,
+                     rf_perform_10fold, rf_perform_testset,
+                     unweight_perform_10fold, weight_perform_10fold)
+names(all_performance) <- c("lm_10fold", "lm_testset",
+                            "lasso_10fold", "lasso_testset",
+                            "ridge_10fold", "ridge_testset",
+                            "en_10fold", "en_testset",
+                            "rf_10fold", "rf_testset",
+                            "unweight", "weight")
+sort(all_performance)
+
+##' The linear model using the first 20 items as the testset performs the best.
+##' The weighted prediction performs the worst.
 
