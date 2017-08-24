@@ -19,14 +19,14 @@ import math
 with open("nyt_ac.json") as json_data:
     nyt_data = json.load(json_data)
 
-# ## writing pertinent text to files
-# for i, doc in enumerate(nyt_data):
-# 	title = doc["body"]["title"]
-# 	text = doc["body"]["body_text"]
-# 	with open("stories/doc" + str(i+1) + ".txt", "w") as f:
-# 		f.write(title.encode("UTF-8"))
-# 		f.write("\n")
-# 		f.write(text.encode("UTF-8"))
+## writing pertinent text to files
+for i, doc in enumerate(nyt_data):
+	title = doc["body"]["title"]
+	text = doc["body"]["body_text"]
+	with open("stories/doc" + str(i+1) + ".txt", "w") as f:
+		f.write(title.encode("UTF-8"))
+		f.write("\n")
+		f.write(text.encode("UTF-8"))
 
 def process_string(s, process_stopwords, stopwords_list = []):
 	s = re.sub(r'[^\w\s]','',s)
@@ -59,19 +59,19 @@ corpus_words = sum(processed_nyt, [])
 ## Making list of 1000 most used terms
 common_words = Counter(corpus_words).most_common(1000)
 
-# with open("doc_term_mat.csv", 'ab') as f:
+with open("doc_term_mat.csv", 'ab') as f:
 
-# 	## extracting only words (not counts)
-# 	words = [i[0] for i in common_words]
+	## extracting only words (not counts)
+	words = [i[0] for i in common_words]
 	
-# 	## setting up csv
-# 	writer = csv.writer(f)
-# 	writer.writerow(["desk"] + words)
+	## setting up csv
+	writer = csv.writer(f)
+	writer.writerow(["desk"] + words)
 
-# 	## counting
-# 	for i, story in enumerate(processed_nyt):
-# 		row = [story.count(w) for w in words]
-# 		writer.writerow([desks[i]] + row)
+	## counting
+	for i, story in enumerate(processed_nyt):
+		row = [story.count(w) for w in words]
+		writer.writerow([desks[i]] + row)
 
 
 
