@@ -47,7 +47,6 @@ with open("doc_term_mat.csv", 'ab') as f:
 
 	## extracting only words (not counts)
 	words = common_words.keys()
-	total_words = float(sum(common_words.values()))
 	
 	## setting up csv
 	writer = csv.writer(f)
@@ -55,7 +54,7 @@ with open("doc_term_mat.csv", 'ab') as f:
 
 	## counting
 	for i, section in enumerate(processed_mach):
-		row = [section.count(w)/total_words for w in words]
+		row = [section.count(w) for w in words]
 		writer.writerow([mach_files[i]] + row)
 
 

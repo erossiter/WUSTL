@@ -49,15 +49,85 @@ colMeans(nyt_vanilla$theta)
 
 ## 2. Machiavelli's Prince  ------------------------------------------------------------
 
-## reading in data preprocessed in Python script
-mach <- read.csv("doc_term_mat.csv", row.names = 1)
+## PCA
 
-# ## implementing the suggestion
-# vcov_mat <- (t(as.matrix(mach)) %*% as.matrix(mach))/500
-# eig_vals <- eigen(vcov_mat)$values
-# eig_var <- (1/length(eig_vals)) * (sum((eig_vals - mean(eig_vals))^2))
-# 
-# ## 
-# pca <- prcomp(mach, scale = T)
-# 
-# plot(pca$sdev)
+## reading in data preprocessed in Python script
+## creating scree plot
+mach_raw <- read.csv("doc_term_mat.csv", row.names = 1)
+mach <- adply(mach_raw, 1, function(row) row/sum(row))
+rownames(mach) <- rownames(mach_raw)
+pca <- prcomp(mach, scale = T)
+pdf("scree_plot.pdf", width = 10, height = 10)
+plot(pca, type = "l", main = "Scree Plot, The Prince")
+dev.off()
+
+##' The "elbow test" is not super useful here as the "elbow" is not
+##' clearly defined.  I think the variance explained does clearly drop
+##' after 2 principle components.  But this is fairly subjective.
+##' Is the drop from 4 to 5 componenets big enough to care about that
+##' additional explained variance?  Maybe.  But here I'll procede with
+##' just the two principle components.
+
+
+pdf("twodim_mach.pdf", width = 10, height = 10)
+mach_names <- sub(pattern = "MachText/Mach_", x = rownames(pca$x), replacement = "")
+mach_names <- sub(pattern = ".txt", x = mach_names, replacement = "")
+plot(1, 1, type = "n", xlim = range(pca$x[,1]), ylim = range(pca$x[,2]),
+     main = "Two-Dimensional Embedding of The Prince Documents",
+     xlab = "First Dimension",
+     ylab = "Second Dimension",
+     cex.main = 2,
+     cex.lab = 1.5)
+text(x = pca$x[,1],
+     y = pca$x[,2],
+     cex = 1,
+     labels = mach_names)
+dev.off()
+
+sort(pca$rotation[,1], decreasing = TRUE)[1:10]
+sort(pca$rotation[,2], decreasing = TRUE)[1:10]
+
+##' We see from the plot that there aren't really any documents with
+##' "high" loadings from both dimensions.  This makes sense as we'd expect
+##' the two highest dimensions to explain different things.
+##' We see from the variable loadings that the first dimension dimension
+##' deals with nobility and the second dimension deals with ruling.  So the
+##' primary variation stems from if the document talks about how to
+##' be a proper noble person or being a good protector.
+
+
+
+## MDS
+
+## euclidean distance
+DX = dist(mach, method = "euclidean")
+
+## classic mds
+mds_scale <- cmdscale(DX, k = 2)
+
+## pca, but with out scaling option
+pca_noscale <- prcomp(mach, scale = FALSE)
+
+## correlatoin between 1st dimension of embeddings
+cor(mds_scale[,1], pca_noscale$x[,1])  ## literally 1.0?
+
+## now the manhattan method
+DX_manhattan <- dist(mach, method = "manhattan")
+
+## mds with manhattan
+mds_manhattan <- cmdscale(DX_manhattan, k = 2)
+
+## pca, but with out scaling option
+pca_manhattan <- prcomp(mach, scale = FALSE)
+
+## correlatoin between 1st dimension of embeddings
+cor(mds_manhattan[,1], pca_manhattan$x[,1])  ## -.94
+
+##' The distance measure is different in that PCA preserves
+##' the covariance of the data when minimizing dimensions
+##' and MDS preserves the distance between the data when minimizing
+##' dimensions.  As we see above, PCA is a special case of MDS
+##' when the covariance equals the euclidean distance.
+
+
+
